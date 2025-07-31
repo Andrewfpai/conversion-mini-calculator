@@ -1,103 +1,282 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState, useRef } from 'react';
+
+const formatter = new Intl.NumberFormat('en-US');
+
+export default function ExchangeRate() {
+  const [rates, setRates] = useState(null);
+
+  const [customRpPerRmb, setCustomRpPerRmb] = useState(null); // start null
+  const [customRmbAmount, setCustomRmbAmount] = useState(1);
+  const [customRpAmount, setCustomRpAmount] = useState(0);
+  const [status, setStatus] = useState(true);
+
+  const lastChangedRef = useRef('rmb');
+
+  const [customRpPerRmb2, setCustomRpPerRmb2] = useState(null); // start null
+  const [customRmbAmount2, setCustomRmbAmount2] = useState(1);
+  const [customRpAmount2, setCustomRpAmount2] = useState(0);
+
+  const lastChangedRef2 = useRef('rmb');
+
+  useEffect(() => {
+    fetch('/api/coingecko')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => setRates(data))
+      .catch(err => console.error("Failed to fetch exchange rate:", err));
+  }, []);
+
+  // Set initial B from API rate once
+  useEffect(() => {
+    if (rates) {
+      const usdtToIdr = rates?.tether?.idr;
+      const usdtToRmb = rates?.tether?.cny;
+      const rmbToIdr = usdtToIdr / usdtToRmb;
+
+      if (customRpPerRmb === null) {
+        setCustomRpPerRmb(Number(rmbToIdr.toFixed(2)));
+        setCustomRpAmount(Number(rmbToIdr.toFixed(2)) * customRmbAmount);
+        setCustomRpPerRmb2(Number(rmbToIdr.toFixed(2)));
+        setCustomRpAmount2(Number(rmbToIdr.toFixed(2)) * customRmbAmount2);
+      }
+    }
+  }, [rates, customRpPerRmb, customRmbAmount]);
+
+  if (!rates || customRpPerRmb === null) return <p>Loading...</p>;
+
+  const usdtToIdr = rates?.tether?.idr;
+  const usdtToRmb = rates?.tether?.cny;
+  const rmbToIdr = usdtToIdr / usdtToRmb;
+
+  function handleRpPerRmbChange(e) {
+    const val = Number(e.target.value.replace(/,/g, ''));
+    if (val <= 0 || isNaN(val)) return;
+    setCustomRpPerRmb(val);
+    if (lastChangedRef.current === 'rmb') {
+      setCustomRpAmount(customRmbAmount * val);
+    } else {
+      setCustomRmbAmount(customRpAmount / val);
+    }
+  }
+  function handleRpPerRmbChange2(e) {
+    const val = Number(e.target.value.replace(/,/g, ''));
+    if (val <= 0 || isNaN(val)) return;
+    setCustomRpPerRmb2(val);
+    if (lastChangedRef2.current === 'rmb') {
+      setCustomRpAmount2(customRmbAmount2 * val);
+    } else {
+      setCustomRmbAmount2(customRpAmount2 / val);
+    }
+  }
+
+  function handleCustomRmbChange(e) {
+    let val = e.target.value.replace(/,/g, '');
+
+    if (val === '') {
+      setCustomRmbAmount('');
+      setCustomRpAmount(0);
+      return;
+    }
+
+    if (!/^\d*\.?\d{0,2}$/.test(val)) return;
+
+    const num = Number(val);
+    if (isNaN(num) || num < 0) return;
+
+    lastChangedRef.current = 'rmb';
+    setCustomRmbAmount(num);
+    setCustomRpAmount(num * customRpPerRmb);
+  }
+
+  function handleCustomRmbChange2(e) {
+    let val = e.target.value.replace(/,/g, '');
+
+    if (val === '') {
+      setCustomRmbAmount2('');
+      setCustomRpAmount2(0);
+      return;
+    }
+
+    if (!/^\d*\.?\d{0,2}$/.test(val)) return;
+
+    const num = Number(val);
+    if (isNaN(num) || num < 0) return;
+
+    lastChangedRef.current = 'rmb';
+    setCustomRmbAmount2(num);
+    setCustomRpAmount2(num * customRpPerRmb2);
+  }
+
+  function handleCustomRpChange(e) {
+    const val = Number(e.target.value.replace(/,/g, ''));
+    if (val < 0 || isNaN(val)) return;
+    lastChangedRef.current = 'rp';
+    setCustomRpAmount(val);
+    setCustomRmbAmount(val / customRpPerRmb);
+  }
+
+  function handleCustomRpChange2(e) {
+    const val = Number(e.target.value.replace(/,/g, ''));
+    if (val < 0 || isNaN(val)) return;
+    lastChangedRef.current = 'rp';
+    setCustomRpAmount2(val);
+    setCustomRmbAmount2(val / customRpPerRmb2);
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="w-full h-full min-h-screen p-[4%] pt-[8%] md:pt-[4%] space-y-4 bg-gray-100 ">
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className='flex flex-col gap-5 '>
+        <div className='flex mx-auto flex-row items-center gap-[50px] max-w-[90%] justify-center text-stone-700 font-bold'>
+          <div className='flex flex-col items-center'>
+            <span className='text-xs md:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm md:text-lg'>Rp{formatter.format(usdtToIdr)}</span>
+          </div>
+
+          <div className='flex flex-col items-center'>
+            <span className='text-xs md:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm md:text-lg'>¥ {formatter.format(usdtToRmb)}</span>
+          </div>
+          <div className='flex flex-col items-center'>
+            <span className='text-xs md:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm md:text-lg'>¥ {formatter.format(rmbToIdr.toFixed(2))}</span>
+          </div>
+      
+        
+      </div>
+
+      <hr className='text-stone-300'/>
+
+      <div className="flex flex-row px-[30%] md:px-56 md:max-w-[100%] max-w-[90%] mx-auto justify-center gap-[35%] bg-purple-100 py-7 rounded-lg">
+        
+        <div className='flex flex-col text-center items-center gap-[3px] '>
+          <span className='flex font-bold text-stone-700'>RMB</span>
+          <span className='flex items-center text-stone-700 gap-1 ' >
+            <span className='text-[100%]'>¥</span>
+            <span className='text-[150%] font-bold'>1</span>
+          </span>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className='flex flex-col text-center items-center gap-1 '>
+          <span className='flex font-bold text-stone-700'>RUPIAH</span>
+          <span className='flex items-center text-[#7e57c2] gap-2'>
+            <span className='text-[100%]'>Rp</span>
+            <input
+            type="text"
+            value={formatter.format(customRpPerRmb)}
+            onChange={handleRpPerRmbChange}
+            className="min-w-4 max-w-28 text-center flex font-bold text-[150%]"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          </span>
+        </div>
+
+        
+      </div>
+
+      <div className="flex flex-row px-[30%] md:px-48 md:max-w-[100%] max-w-[90%] mx-auto justify-center gap-[20%] bg-purple-100 py-7 rounded-lg">
+        
+        <div className='flex flex-col text-center items-center gap-[3px] '>
+          <span className='flex font-bold text-stone-700'>RMB</span>
+          <span className='flex items-center text-stone-700 gap-1' >
+            <span className='text-[100%]'>¥</span>
+            <input
+          type="text"
+          value={customRmbAmount === '' ? '' : formatter.format(customRmbAmount)}
+          onChange={handleCustomRmbChange}
+          className="max-w-20 text-center flex font-bold text-[150%]"
+        />
+          </span>
+        </div>
+        <div className='flex flex-col text-center items-center gap-1 '>
+          <span className='flex font-bold text-stone-700'>RUPIAH</span>
+          <span className='flex items-center text-[#7e57c2] gap-2'>
+            <span className='text-[100%]'>Rp</span>
+            <input
+          type="text"
+          value={formatter.format(customRpAmount)}
+          onChange={handleCustomRpChange}
+          className="max-w-30 text-center flex font-bold text-[150%]"
+        />
+          </span>
+        </div>
+
+        
+      </div>
+      
+      {/* SECTION 2 */}
+      <div className='flex mx-auto text-3xl w-12 h-12 text-stone-50 cursor-pointer bg-[#7e57c2] rounded-[25px] text-center' onClick={()=>{setStatus(!status)}}>
+        <span className='flex items-center mx-auto'>{status?"+":"-"}</span>
+      </div>
+      
+      
+      <div className={status?"hidden":"flex gap-5 flex-col"}>
+        <div className="flex flex-row px-[30%] md:px-56 md:max-w-[100%] max-w-[90%] mx-auto justify-center gap-[35%] bg-purple-100 py-7 rounded-lg">
+        
+        <div className='flex flex-col text-center items-center gap-[3px] '>
+          <span className='flex font-bold text-stone-700'>RMB</span>
+          <span className='flex items-center text-stone-700 gap-1 ' >
+            <span className='text-[100%]'>¥</span>
+            <span className='text-[150%] font-bold'>1</span>
+          </span>
+        </div>
+        <div className='flex flex-col text-center items-center gap-1 '>
+          <span className='flex font-bold text-stone-700'>RUPIAH</span>
+          <span className='flex items-center text-[#7e57c2] gap-2'>
+            <span className='text-[100%]'>Rp</span>
+            <input
+            type="text"
+            value={formatter.format(customRpPerRmb2)}
+            onChange={handleRpPerRmbChange2}
+            className="min-w-4 max-w-28 text-center flex font-bold text-[150%]"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          </span>
+        </div>
+
+        
+      </div>
+
+        <div className="flex flex-row px-[30%] md:px-48 md:max-w-[100%] max-w-[90%] mx-auto justify-center gap-[20%] bg-purple-100 py-7 rounded-lg">
+          
+          <div className='flex flex-col text-center items-center gap-[3px] '>
+            <span className='flex font-bold text-stone-700'>RMB</span>
+            <span className='flex items-center text-stone-700 gap-1' >
+              <span className='text-[100%]'>¥</span>
+              <input
+            type="text"
+            value={customRmbAmount2 === '' ? '' : formatter.format(customRmbAmount2)}
+            onChange={handleCustomRmbChange2}
+            className="max-w-20 text-center flex font-bold text-[150%]"
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            </span>
+          </div>
+          <div className='flex flex-col text-center items-center gap-1 '>
+            <span className='flex font-bold text-stone-700'>RUPIAH</span>
+            <span className='flex items-center text-[#7e57c2] gap-2'>
+              <span className='text-[100%]'>Rp</span>
+              <input
+            type="text"
+            value={formatter.format(customRpAmount2)}
+            onChange={handleCustomRpChange2}
+            className="max-w-30 text-center flex font-bold text-[150%]"
+          />
+            </span>
+          </div>
+
+          
+        </div>
+      </div>
+
+
+      </div>
+
+      
+      
+
+
+      
     </div>
   );
 }
