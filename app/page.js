@@ -131,19 +131,19 @@ export default function ExchangeRate() {
     <div className="w-full h-full min-h-screen p-[4%] pt-[8%] md:pt-[4%] space-y-4 bg-gray-100 ">
 
       <div className='flex flex-col gap-5 '>
-        <div className='flex mx-auto flex-row items-center gap-[50px] max-w-[90%] justify-center text-stone-700 font-bold'>
+        <div className='flex  flex-row items-center max-w-[90%] justify-around text-stone-700 font-bold'>
           <div className='flex flex-col items-center'>
-            <span className='text-xs md:text-lg'>1 $</span>
-            <span className='text-[#7e57c2] text-sm md:text-lg'>Rp{formatter.format(usdtToIdr)}</span>
+            <span className='text-xs sm:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm sm:text-lg'>Rp{formatter.format(usdtToIdr)}</span>
           </div>
 
           <div className='flex flex-col items-center'>
-            <span className='text-xs md:text-lg'>1 $</span>
-            <span className='text-[#7e57c2] text-sm md:text-lg'>¥ {formatter.format(usdtToRmb)}</span>
+            <span className='text-xs sm:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm sm:text-lg'>¥ {formatter.format(usdtToRmb)}</span>
           </div>
           <div className='flex flex-col items-center'>
-            <span className='text-xs md:text-lg'>1 $</span>
-            <span className='text-[#7e57c2] text-sm md:text-lg'>¥ {formatter.format(rmbToIdr.toFixed(2))}</span>
+            <span className='text-xs sm:text-lg'>1 $</span>
+            <span className='text-[#7e57c2] text-sm sm:text-lg'>¥ {formatter.format(rmbToIdr.toFixed(2))}</span>
           </div>
       
         
